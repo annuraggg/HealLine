@@ -7,7 +7,6 @@ import { verifyToken } from "../../apis/jwt.js";
 router.post("/",verifyToken, async (req, res) => {
   try {
     const { id } = req.body;
-    console.log(id);
     const appointments = await apppointmentCol
       .find({ patientName: id.toString() })
       .toArray();

@@ -15,6 +15,7 @@ try {
 export const med = client.db("Medi360");
 export const userCol = med.collection("users");
 export const apppointmentCol = med.collection("appointments");
+export const prescriptionCol = med.collection("prescriptions");
 
 
 

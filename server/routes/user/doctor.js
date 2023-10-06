@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { userCol, apppointmentCol } from "../../apis/mongo.js";
+import { userCol, apppointmentCol, prescriptionCol } from "../../apis/mongo.js";
 import { ObjectId } from "mongodb";
 import { verifyToken } from "../../apis/jwt.js";
 import twilio from "twilio";
@@ -69,7 +69,6 @@ const getAccessToken = (roomName) => {
 };
 
 router.post("/:did/video", async (req, res) => {
-  console.log("TOKEN SENT");
   if (!req.body || !req.body.roomName) {
     return res.status(400).json({ msg: "Must include roomName argument." });
   }
@@ -83,22 +82,23 @@ router.post("/:did/video", async (req, res) => {
 
 router.post("/:id/book", verifyToken, async (req, res) => {
   const id = req.params.id;
-  const user = req.user;
   const date = req.body.date;
   const time = req.body.time;
+  const desc = req.body.desc;
   const status = "pending";
 
-  const formattedDate = new Date(date);
-  const formattedTime = new Date(`${time}`);
-  const timestamp = formattedTime.getTime() / 1000;
+  const dt = date + " " + time;
+  const dateF = new Date(dt);
+  const isoDateString = dateF.toISOString();
 
   const booking = {
-    date: formattedDate,
-    time: timestamp,
+    date: isoDateString,
     status: status,
     patientName: req.user.id,
     doctorName: id,
     confirmed: false,
+    desc: desc,
+    presc: "",
   };
   try {
     await apppointmentCol.insertOne(booking);
@@ -108,5 +108,48 @@ router.post("/:id/book", verifyToken, async (req, res) => {
     res.json({ success: false, error: error });
   }
 });
+
+router.post("/:id/rate", verifyToken, async (req, res) => {
+  const id = req.params.id;
+  const rating = req.body.rating;
+  const review = req.body.review;
+  const appointmentNo = req.body.appointmentNo;
+
+  try {
+    const appointment = await apppointmentCol.findOne({_id: new ObjectId(appointmentNo)})
+    if (appointment.status == "pending") {
+      return res.json({ success: false, error: "Appointment not completed" });
+    } else if (appointment  .status == "cancelled") {
+      return res.json({ success: false, error: "Appointment cancelled" });
+    } 
+
+    await userCol.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $push: {
+          reviews: {
+            rating: rating.toString(),
+            review: review.toString(),
+            patient: req.user.id.toString(),
+          },
+        },
+      }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, error: error });
+  }
+});
+
+router.post("/:ui/prescriptions", verifyToken, async (req, res) => {
+  try {
+    const presc = await prescriptionCol.findOne({patientName: req.user.id.toString(), doctorName: req.params.id.toString()})
+    res.json({ success: true, presc: presc });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, error: error });
+  }
+})
 
 export default router;
