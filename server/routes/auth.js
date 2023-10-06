@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
-  console.log(email);
   try {
     const user = await userCol.findOne({
       email: email.toString(),
@@ -36,7 +35,7 @@ router.post("/", async (req, res) => {
           })
           .send({ success: true, role: user.role });
       } else {
-        res.json({ succes: false });
+        res.json({ success: false });
       }
     }
   } catch (err) {
@@ -45,7 +44,7 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/register", async (req, res) => {
-  const { fName, lName, email, password, role } = req.body;
+  const { fName, lName, email, password, role, gender } = req.body;
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -63,6 +62,7 @@ router.post("/register", async (req, res) => {
         email: email.toString(),
         password: hashedPassword,
         role: role.toString(),
+        gender: gender.toString(),
       });
 
       const token = jwt.sign(
