@@ -1,32 +1,19 @@
-const express = require('express');
+import express from "express";
 const app = express();
-const dotenv = require('dotenv');
+import userHandler from "./routes/user/main.js";
+import authHandler from "./routes/auth.js"
+import cors from "cors";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+
 dotenv.config();
-const cors = require('cors');
-const cookieSession = require("cookie-session");
-const passport = require('passport');
-const passportStrategy = require("./passport");
-const authRoute = require("./routes/auth");
-const conn = require('./conn/conn');
-conn();
-app.use(cors());
-app.use(express.json());
+app.use(express.json())
+app.use(cookieParser());
+console.log(process.env.FRONTEND_ADDRESS);
 
-app.use(
-	cookieSession({
-		name: "session",
-		keys: ["cyberwolve"],
-		maxAge: 24 * 60 * 60 * 100,
-	})
-);
+app.use(cors({ credentials: true, origin: process.env.FRONTEND_ADDRESS }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+app.use("/auth", authHandler)
+app.use("/users", userHandler);
 
-// Routes
-app.use('/api/v1',require('./routes/UserRoutes'))
-app.use("/auth", authRoute);
-
-app.listen(4000,()=>{
-    console.log(`Hii from backend`);
-})
+app.listen(3000);

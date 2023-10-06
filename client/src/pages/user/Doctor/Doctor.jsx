@@ -28,14 +28,58 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Image,
 } from "@chakra-ui/react";
-import Star from "../../../components/user/global/Star";
+import Star from "../../../components/global/Star";
 import Message from "./Message";
 import Presc from "./Presc";
 import Video from "./Video";
 const Doctor = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const firstField = React.useRef();
+  const [doctor, setDoctor] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [avg, setAvg] = React.useState(0);
+
+  useEffect(() => {
+    if (!loading) {
+      let sum = 0;
+      doctor?.review?.map((review) => {
+        sum += review.rating;
+      });
+      console.log(sum);
+      setAvg(sum / doctor.review.length);
+    }
+  }, [doctor, loading]);
+
+  useEffect(() => {
+    const id = window.location.pathname.split("/")[3];
+    fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success == true) {
+          setDoctor(data.doctor);
+          setLoading(false);
+        } else {
+          console.log("error");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+   
+  }, []);
+
+  useEffect(() => {
+    console.log(doctor.image === "");
+  }, [doctor])
 
   const {
     isOpen: isPrescOpen,
@@ -54,19 +98,22 @@ const Doctor = () => {
       <Navbar />
       <Box bg="gray.100" height="88vh" p="10px 50px">
         <Flex gap="40px">
-          <Skeleton height="250px" width="250px"></Skeleton>
+          {doctor.image !== "" ? (
+          <Image
+            height="250px"
+            width="250px"
+            src={doctor.image}
+            objectFit="cover"
+          ></Image>
+          ) : (
+            <Box bg="gray.300" height="250px" width="250px" />
+          )}
           <Box width="60%">
-            <Heading>Doctor Name</Heading>
-            <Text mt="10px">Orthopedic</Text>
-            <Text mt="20px">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio
-              natus incidunt expedita, porro dolore eligendi dolor, voluptate
-              nesciunt quos vel suscipit sunt necessitatibus, inventore maiores
-              explicabo totam. Rem, quia neque. Doloremque, quisquam consequatur
-              magnam aliquam id, dolor cumque totam unde nemo eaque sapiente qui
-              quo doloribus, quae explicabo! Aliquam praesentium omnis nihil?
-              Hic tempora, quia dolorum corrupti veniam a dolores.
-            </Text>
+            <Heading>
+              {doctor.fname} {doctor.lname}
+            </Heading>
+            <Text mt="10px">{doctor.category}</Text>
+            <Text mt="20px">{doctor.about}</Text>
             <Flex gap="10px" mt="20px">
               <IconButton
                 aria-label="Search database"
@@ -92,54 +139,31 @@ const Doctor = () => {
             </Flex>
           </Box>
           <Flex mt={"5px"} direction="column" gap="20px">
-            <Star rating="2.5" fontSize={"35px"} />
-            <Text fontSize="20px" fontWeight="bold" alignSelf="flex-end">₹5000</Text>
+            <Star rating={avg} fontSize={"35px"} />
+            <Text fontSize="20px" fontWeight="bold" alignSelf="flex-end">
+              ₹{doctor.fees}
+            </Text>
           </Flex>
         </Flex>
 
         <Flex gap="20px" overflowX="auto">
           <Card mt="25px" minW="300px" height="300px">
             <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
+          {doctor.review?.length > 0 ? (
+                doctor?.review?.map((review, index) => {
+                  return (
+                    <Box key={index}>
+                      <Star rating={review.rating} fontSize={"20px"} />
+                      <Text fontSize="20px">{review.review}</Text>
+                    </Box>
+                  );
+                })
+              ) : (
+                <Text>No Reviews Yet</Text>
+              )}
+
             </CardBody>
           </Card>{" "}
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
-            </CardBody>
-          </Card>{" "}
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
-            </CardBody>
-          </Card>{" "}
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
-            </CardBody>
-          </Card>{" "}
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
-            </CardBody>
-          </Card>{" "}
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              <Text>
-                View a summary of all your customers over the last month.
-              </Text>
-            </CardBody>
-          </Card>
         </Flex>
       </Box>
       <Drawer

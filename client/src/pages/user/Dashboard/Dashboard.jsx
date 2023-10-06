@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/user/Navbar";
 import {
   Box,
@@ -16,93 +16,27 @@ import {
   Avatar,
   Button,
 } from "@chakra-ui/react";
-import Star from "../../../components/user/global/Star";
+import Star from "../../../components/global/Star";
 
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const docs = [
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-    {
-      name: "Dr. John Doe",
-      type: "Allergists/Immunologists",
-      rating: 4.5,
-      experience: 5,
-      fees: 500,
-      address: "Address",
-      about: "About",
-      image: "Image",
-    },
-  ];
+  const [docs, setDocs] = useState([])
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/dashboard`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(async (res) => {
+      const response = await res.json();
+      setDocs(response.doctors)
+    }).catch((err) => {
+      console.log(err);
+    })
+  }, []);
 
   const navigate = useNavigate();
 
@@ -120,8 +54,16 @@ const Dashboard = () => {
             align="center"
             flexDirection="row-reverse"
           >
-            <Input placeholder="Search" width="250px" border="1px solid gray"></Input>
-            <Select placeholder="Select Type" width="250px" border="1px solid gray">
+            <Input
+              placeholder="Search"
+              width="250px"
+              border="1px solid gray"
+            ></Input>
+            <Select
+              placeholder="Select Type"
+              width="250px"
+              border="1px solid gray"
+            >
               <option>Allergists/Immunologists</option>
               <option>Cardiologists</option>
               <option>Dermatologists</option>
@@ -148,7 +90,7 @@ const Dashboard = () => {
         >
           {docs.map((doc) => (
             <Flex
-              key={doc.name}
+              key={doc._id}
               borderRadius="20px"
               mt="20px"
               p="20px"
@@ -161,13 +103,13 @@ const Dashboard = () => {
                 <Avatar p="10px" src={doc.image} size="xl"></Avatar>
                 <Flex direction="column" gap="10px">
                   <Text fontSize="20px" fontWeight="bold">
-                    {doc.name}
+                    {doc.fName} {doc.lName}
                   </Text>
                   <Text fontSize="15px">{doc.type}</Text>
                   <Flex gap="10px">
                     <Text fontSize="15px">Rating: {doc.rating}</Text>
                     <Text fontSize="15px">
-                      Experience: {doc.experience} Years
+                      Experience: {doc.exp} Years
                     </Text>
                   </Flex>
                   <Flex align="center" gap="10px">
@@ -179,7 +121,12 @@ const Dashboard = () => {
                 </Flex>
               </Flex>
               <Tooltip label="Book Appointment">
-                <Button colorScheme="green" onClick={() => navigate(`/doc/${doc._id}`)}>View</Button>
+                <Button
+                  colorScheme="green"
+                  onClick={() => navigate(`doctor/${doc._id}`)}
+                >
+                  View
+                </Button>
               </Tooltip>
             </Flex>
           ))}

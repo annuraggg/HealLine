@@ -13,10 +13,58 @@ import {
   FormLabel,
   Heading,
   Link,
+  InputGroup,
+  InputRightAddon,
+  InputRightElement,
 } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import Register from "./Register";
+import emailjs from "@emailjs/browser";
 
 const Auth = () => {
   const [register, setRegister] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [buttonLoading, setButtonLoading] = useState(false);
+
+  const registerFunc = () => {
+    setRegister(false);
+  }
+
+  const navigate = useNavigate();
+
+  const login = () => {
+    setButtonLoading(true);
+    console.log(email);
+    fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/auth`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    })
+      .then(async (res) => await res.json())
+      .then((response) => {
+        setButtonLoading(false);
+        if (response.success === true) {
+          if (response.role === "D") {
+            navigate("/doctor");
+          } else if (response.role === "U") {
+            navigate("/user");
+          } else {
+            console.log("Something went wrong");
+          }
+        }
+      })
+      .catch((e) => {
+        setButtonLoading(false);
+        console.log(e);
+      });
+  };
 
   if (!register) {
     return (
@@ -38,20 +86,43 @@ const Auth = () => {
           bg="#FEFFFE"
           border="1px solid #F5F7FF"
         >
-          <Heading>Welcome to {import.meta.env.VITE_APP_NAME}</Heading>
+          <Heading
+            fontFamily="Dancing Script; cursive"
+            fontSize="40px"
+            mb="20px"
+          >
+            Welcome to {import.meta.env.VITE_APP_NAME}
+          </Heading>
           <Flex gap="20px" direction="column">
             <FormControl>
-              <Input placeholder="Enter Your Username"></Input>
+              <InputGroup>
+                <Input
+                  placeholder="Enter Your Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                ></Input>
+              </InputGroup>
             </FormControl>
             <FormControl>
-              <Input placeholder="Enter Your Password" tyoe="password"></Input>
+              <Input
+                placeholder="Enter Your Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              ></Input>
             </FormControl>
             <Flex direction="column" gap="10px" align="center" width="20vw">
-              <Button width="20vw" colorScheme="purple" bg="#6D49FA">
+              <Button
+                width="20vw"
+                colorScheme="purple"
+                bg="#6D49FA"
+                onClick={login}
+                isLoading={buttonLoading}
+              >
                 Login
               </Button>
-              <Link onClick={() => setRegister(true)}>
-                Or Create a New Account
+              <Link onClick={() => setRegister(true)} mt="10px" alignSelf="flex-end">
+                Register?
               </Link>
             </Flex>
           </Flex>
@@ -59,71 +130,7 @@ const Auth = () => {
       </Flex>
     );
   } else {
-    return (
-      <Flex
-        align="center"
-        justify="center"
-        height="100vh"
-        direction="column"
-        gap="20px"
-        bg="#FDFDFF"
-      >
-        <Flex
-          align="center"
-          justify="center"
-          direction="column"
-          gap="20px"
-          padding="50px"
-          borderRadius="20px"
-          bg="#FEFFFE"
-          border="1px solid #F5F7FF"
-        >
-          <Heading>Welcome to {import.meta.env.VITE_APP_NAME}</Heading>
-          <Tabs variant="soft-rounded" colorScheme="green">
-            <TabList>
-              <Tab>Signup as User</Tab>
-              <Tab>Signup as Doctor</Tab>
-            </TabList>
-            <TabPanels mt="20px">
-              <TabPanel>
-                <Flex direction="column" gap="20px">
-                  <Flex gap="20px">
-                    <Input placeholder="First Name" />
-                    <Input placeholder="Last Name" />
-                  </Flex>
-                  <Input placeholder="Email" />
-                  <Input placeholder="Phone" />
-                  <Flex gap="20px">
-                    <Input placeholder="Password" />
-                    <Input placeholder="Confirm Password" />
-                  </Flex>
-                </Flex>
-                <Button mt="20px" float="right" colorScheme="green">
-                  Signup
-                </Button>
-              </TabPanel>
-              <TabPanel>
-                <Flex direction="column" gap="20px">
-                  <Flex gap="20px">
-                    <Input placeholder="First Name" />
-                    <Input placeholder="Last Name" />
-                  </Flex>
-                  <Input placeholder="Email" />
-                  <Input placeholder="Phone" />
-                  <Flex gap="20px">
-                    <Input placeholder="Password" />
-                    <Input placeholder="Confirm Password" />
-                  </Flex>
-                </Flex>
-                <Button mt="20px" float="right" colorScheme="green">
-                  Signup
-                </Button>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </Flex>
-      </Flex>
-    );
+    return <Register register={registerFunc} />;
   }
 };
 
