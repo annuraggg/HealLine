@@ -28,4 +28,14 @@ const getUserData = async(req,res)=>{
     }
 }
 
-module.exports = {hello,postUserData,getUserData};
+const loadUser = async(req,res)=>{
+    const email = req.body.email; 
+    const user = await User.findOne({email: email});
+    if(user){
+        res.json({status:200,data:user});
+    }else{
+        res.json({status:400,message:'Document Not Found'});
+    }
+}
+
+module.exports = {hello,postUserData,getUserData,loadUser};
