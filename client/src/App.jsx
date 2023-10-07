@@ -8,7 +8,7 @@ import "./App.css";
 import Home from "./pages/home/Home";
 
 import DoctorAppointment from "./pages/Doctor/Appointments";
-import Profile from "./components/doctor/profile"
+import Profile from "./components/doctor/Profile"
 import Push from "push.js";
 function App() {
 
