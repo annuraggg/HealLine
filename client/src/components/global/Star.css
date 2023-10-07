@@ -1,7 +1,7 @@
 :root {
   --star-size: 15px;
-  --star-color: lightgray;
-  --star-background: #fc0;
+  --star-color: rgb(116, 116, 116);
+  --star-background: rgb(218, 174, 2);
 }
 .Stars {
   --percent: calc(var(--rating) / 5 * 100%);
@@ -17,6 +17,7 @@
     var(--star-background) var(--percent),
     var(--star-color) var(--percent)
   );
+
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

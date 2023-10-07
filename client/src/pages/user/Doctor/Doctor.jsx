@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/user/Navbar";
 import {
   Box,
@@ -36,6 +36,7 @@ import Presc from "./Presc";
 import Cookies from "js-cookie";
 import jwt_decode from "jwt-decode";
 import Twilio from "twilio-video";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Doctor = () => {
@@ -48,9 +49,10 @@ const Doctor = () => {
   const [update, setUpdate] = React.useState(false);
   const [time, setTime] = React.useState("");
   const [date, setDate] = React.useState("");
+  const [appointmentId, setAppointmentId] = useState([]);
+  const [showPay, setShowPay] = useState(false);
 
   const navigate = useNavigate();
-
   const {
     isOpen: isBookOpen,
     onOpen: onBookOpen,
@@ -63,7 +65,6 @@ const Doctor = () => {
       doctor?.review?.map((review) => {
         sum += review.rating;
       });
-      console.log(sum);
       setAvg(sum / doctor.review.length);
     }
   }, [doctor, loading]);
@@ -78,6 +79,14 @@ const Doctor = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (appointmentId?.status === "approved") {
+      setShowPay(true);
+    } else {
+      setShowPay(false);
+    }
+  }, [appointmentId]);
+
   const id = window.location.pathname.split("/")[3];
   useEffect(() => {
     fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}`, {
@@ -91,6 +100,7 @@ const Doctor = () => {
       .then((data) => {
         if (data.success == true) {
           setDoctor(data.doctor);
+          setAppointmentId(data.appointment);
           setLoading(false);
         } else {
           console.log("error");
@@ -119,7 +129,7 @@ const Doctor = () => {
   };
 
   const startRoom = async (event) => {
-    const roomName = decoded.id;
+    const roomName = appointmentId._id;
 
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}/video`,
@@ -208,6 +218,44 @@ const Doctor = () => {
     "07:30 PM",
   ];
 
+  const checkoutHandler = async (amount) => {
+    try {
+      const {
+        data: { key },
+      } = await axios.get(`http://localhost:3000/api/v1/getKey`);
+      const {
+        data: { order },
+      } = await axios.post(`http://localhost:3000/api/v1/checkout`, {
+        amount,
+      });
+      const options = {
+        key: key,
+        amount: order.amount,
+        currency: "INR",
+        name: "Bharat Sharma",
+        description: "Test Transaction",
+        image: "https://avatars.githubusercontent.com/u/97161064?v=4",
+        order_id: order.id,
+        callback_url: `http://localhost:3000/api/v1/paymentVerification`,
+        prefill: {
+          name: "Bharat Sharma",
+          email: "bharat.sharma@gmail.com",
+          contact: "9555726438",
+        },
+        notes: {
+          address: "Razorpay Corporate Office",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const bookSlot = () => {
     fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}/book`, {
       method: "POST",
@@ -228,8 +276,11 @@ const Doctor = () => {
       .catch((err) => {
         console.log(err);
       });
-  }
+  };
 
+  console.log(appointmentId);
+
+  const today = new Date().toISOString();
   return (
     <>
       <Navbar />
@@ -263,6 +314,7 @@ const Doctor = () => {
               width="250px"
               src={doctor.image}
               objectFit="cover"
+              borderRadius="20px"
             ></Image>
           ) : (
             <Box bg="gray.300" height="250px" width="250px" />
@@ -274,16 +326,31 @@ const Doctor = () => {
             <Text mt="10px">{doctor.category}</Text>
             <Text mt="20px">{doctor.about}</Text>
             <Flex gap="10px" mt="20px">
-              <Button colorScheme="green" size="sm" onClick={onBookOpen}>
-                Book Call
-              </Button>
+              {!appointmentId ? (
+                <Button
+                  colorScheme="green"
+                  onClick={() => {
+                    onBookOpen();
+                  }}
+                >
+                  Book Appointment
+                </Button>
+              ) : (
+                <IconButton
+                  onClick={goVideo}
+                  icon={<i className="fa-solid fa-video" />}
+                  colorScheme="blue"
+                  size="sm"
+                />
+              )}
+
               <IconButton
                 aria-label="Search database"
                 icon={<i className="fa-solid fa-message"></i>}
                 colorScheme="blue"
                 size="sm"
                 onClick={onOpen}
-              />{" "}
+              />
               <IconButton
                 aria-label="Search database"
                 icon={<i className="fa-solid fa-file-prescription" />}
@@ -296,28 +363,50 @@ const Doctor = () => {
           <Flex mt={"5px"} direction="column" gap="20px">
             <Star rating={avg} fontSize={"35px"} />
             <Text fontSize="20px" fontWeight="bold" alignSelf="flex-end">
-              ₹{doctor.fees}
+              ₹{doctor.fees}{" "}
             </Text>
+            {appointmentId?.status === "approved" ? (
+              <Button
+                colorScheme="green"
+                onClick={() => {
+                  checkoutHandler(doctor.fees);
+                }}
+              >
+                Pay
+              </Button>
+            ) : (
+              <Button />
+            )}
           </Flex>
         </Flex>
 
         <Flex gap="20px" overflowX="auto">
-          <Card mt="25px" minW="300px" height="300px">
-            <CardBody>
-              {doctor.review?.length > 0 ? (
-                doctor?.review?.map((review, index) => {
-                  return (
-                    <Box key={index}>
-                      <Star rating={review.rating} fontSize={"20px"} />
-                      <Text fontSize="20px">{review.review}</Text>
-                    </Box>
-                  );
-                })
-              ) : (
-                <Text>No Reviews Yet</Text>
-              )}
-            </CardBody>
-          </Card>{" "}
+          {doctor.review?.length > 0 ? (
+            doctor?.review?.map((review, index) => {
+              return (
+                <Card
+                  mt="25px"
+                  minW="300px"
+                  maxW="300px"
+                  height="350px"
+                  borderRadius="25px"
+                  key={index}
+                  bg="gray.300"
+                >
+                  <CardBody>
+                    <Flex direction="column" align="center" p="5px">
+                      <Star rating={review.rating} fontSize={"30px"} />
+                      <Text fontSize="20px" mt="30px">
+                        {review.review}
+                      </Text>
+                    </Flex>
+                  </CardBody>
+                </Card>
+              );
+            })
+          ) : (
+            <Text>No Reviews Yet</Text>
+          )}
         </Flex>
       </Box>
       <Drawer
@@ -376,13 +465,19 @@ const Doctor = () => {
           <ModalCloseButton />
           <ModalBody>
             <Flex justifyContent="center" direction="column" gap="20px">
-              <Input type="date" placeholder="Select Date" mr="15px" value={date} onChange={(e) => setDate(e.target.value)}/>
+              <Input
+                type="date"
+                placeholder="Select Date"
+                mr="15px"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
               <Flex gap="10px" wrap="wrap">
                 {consultancyTimes.map((hours, index) => {
                   return (
                     <Button
                       key={index}
-                      colorScheme={hours === time ? "green" : "blue" }
+                      colorScheme={hours === time ? "green" : "blue"}
                       size="sm"
                       onClick={() => setTime(hours)}
                       width="100px"

@@ -21,7 +21,29 @@ import Star from "../../../components/global/Star";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const [docs, setDocs] = useState([])
+  const [docs, setDocs] = useState([]);
+  const [selectedType, setSelectedType] = useState("All"); // Default to "All"
+  const [searchQuery, setSearchQuery] = useState("");
+  
+
+  // Function to handle the type selection change
+  const handleTypeChange = (e) => {
+    setSelectedType(e.target.value);
+  };
+
+  // Function to handle the search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredDocs = docs.filter((doc) => {
+    const typeMatch = selectedType === "All" || doc.type === selectedType;
+    const nameMatch =
+      doc.fName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.lName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return typeMatch && nameMatch;
+  });
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/dashboard`, {
@@ -32,10 +54,9 @@ const Dashboard = () => {
       },
     }).then(async (res) => {
       const response = await res.json();
-      setDocs(response.doctors)
-    }).catch((err) => {
-      console.log(err);
-    })
+      setDocs(response.doctors);
+      console.log(response.doctors);
+    });
   }, []);
 
   const navigate = useNavigate();
@@ -58,8 +79,12 @@ const Dashboard = () => {
               placeholder="Search"
               width="250px"
               border="1px solid gray"
+              value={searchQuery}
+              onChange={handleSearchChange}
             ></Input>
             <Select
+              value={selectedType}
+              onChange={handleTypeChange}
               placeholder="Select Type"
               width="250px"
               border="1px solid gray"
@@ -88,7 +113,7 @@ const Dashboard = () => {
           height="73vh"
           mt="30px"
         >
-          {docs.map((doc) => (
+          {filteredDocs.map((doc) => (
             <Flex
               key={doc._id}
               borderRadius="20px"
@@ -102,21 +127,27 @@ const Dashboard = () => {
               <Flex align="center" gap="20px">
                 <Avatar p="10px" src={doc.image} size="xl"></Avatar>
                 <Flex direction="column" gap="10px">
-                  <Text fontSize="20px" fontWeight="bold">
-                    {doc.fName} {doc.lName}
-                  </Text>
-                  <Text fontSize="15px">{doc.type}</Text>
+                  <Box>
+                    {" "}
+                    <Text fontSize="20px" fontWeight="bold">
+                      {doc.fName} {doc.lName}
+                    </Text>
+                    <Text fontSize="15px">{doc.type}</Text>
+                  </Box>
                   <Flex gap="10px">
                     <Text fontSize="15px">Rating: {doc.rating}</Text>
-                    <Text fontSize="15px">
-                      Experience: {doc.exp} Years
-                    </Text>
+                    <Text fontSize="15px">Experience: {doc.exp} Years</Text>
                   </Flex>
                   <Flex align="center" gap="10px">
-                    <Text color="green" fontWeight="bold" fontSize="20px">
+                    <Text
+                      color="green"
+                      fontWeight="bold"
+                      fontSize="20px"
+                      mb="8px"
+                    >
                       <span>₹</span> {doc.fees}
                     </Text>
-                    <Star rating={doc.rating} fontSize={"12px"} />
+                    <Star rating={doc.rating} fontSize={"15px"} />
                   </Flex>
                 </Flex>
               </Flex>

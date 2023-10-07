@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 const router = express.Router();
 import { verifyToken } from "../../apis/jwt.js";
 
-router.post("/",verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
   try {
     const { id } = req.body;
     const appointments = await apppointmentCol

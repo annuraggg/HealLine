@@ -16,6 +16,7 @@ import {
   InputGroup,
   InputRightAddon,
   InputRightElement,
+  useToast
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import Register from "./Register";
@@ -26,6 +27,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [buttonLoading, setButtonLoading] = useState(false);
+
+  const toast = useToast();
 
   const registerFunc = () => {
     setRegister(false);
@@ -56,13 +59,25 @@ const Auth = () => {
           } else if (response.role === "U") {
             navigate("/user");
           } else {
-            console.log("Something went wrong");
+            toast({
+              title: "Error",
+              description: "Wrong email or password",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
           }
         }
       })
       .catch((e) => {
         setButtonLoading(false);
-        console.log(e);
+        toast({
+          title: "Error",
+          description: "Wrong email or password",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
       });
   };
 

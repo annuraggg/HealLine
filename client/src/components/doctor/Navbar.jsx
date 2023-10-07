@@ -2,7 +2,6 @@ import React from "react";
 import {
   Box,
   Flex,
-  Link,
   Menu,
   MenuButton,
   MenuItem,
@@ -10,6 +9,7 @@ import {
   MenuList,
   Heading,
   Button,
+  Link
 } from "@chakra-ui/react";
 
 import { useNavigate } from "react-router-dom";
@@ -40,7 +40,7 @@ const Navbar = () => {
             </MenuButton>
             <MenuList>
               <MenuItem>Profile</MenuItem>
-              <MenuItem>Settings</MenuItem>
+              <MenuItem> <Link to='/settings'> Settings </Link></MenuItem>
               <MenuItem onClick={() => logout()}>Logout</MenuItem>
             </MenuList>
           </Menu>

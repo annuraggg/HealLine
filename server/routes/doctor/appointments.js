@@ -2,14 +2,18 @@ import express from "express";
 import { apppointmentCol, userCol } from "../../apis/mongo.js";
 import { ObjectId } from "mongodb";
 import { verifyToken } from "../../apis/jwt.js";
+import { CompositionHookListInstance } from "twilio/lib/rest/video/v1/compositionHook.js";
 const router = express.Router();
 
 router.post("/", verifyToken, async (req, res) => {
   try {
     const id = req.body.id;
+    console.log(id)
     const appointments = await apppointmentCol
       .find({ doctorName: id.toString() })
       .toArray();
+
+      console.log(appointments)
 
     for (const appointment of appointments) {
       const patient = await userCol.findOne({
@@ -44,7 +48,7 @@ router.post("/:id/accept", verifyToken, async (req, res) => {
   try {
     await apppointmentCol.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status: "accepted" } }
+      { $set: { status: "approved" } }
     );
     res.json({ success: true });
   } catch (error) {
@@ -61,6 +65,31 @@ router.post("/:id/reject", verifyToken, async (req, res) => {
       { $set: { status: "rejected" } }
     );
     res.json({ success: true });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, error: error });
+  }
+});
+
+router.post("/approvedUnits", verifyToken, async (req, res) => {
+  console.log("HIT")
+  try {
+    const { id } = req.body;
+    console.log(id);
+    const appointments = await apppointmentCol
+      .find({ patientName: id.toString(), status: "approved" })
+      .toArray();
+
+      console.log(appointments)
+      
+    for (const appointment of appointments) {
+      const doctor = await userCol.findOne({
+        _id: new ObjectId(appointment.doctorName),
+      });
+      appointment.doctorFName = doctor.fName + " " + doctor.lName;
+    }
+
+    res.json({ success: true, appointments: appointments });
   } catch (error) {
     console.log(error);
     res.json({ success: false, error: error });

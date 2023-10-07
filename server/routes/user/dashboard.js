@@ -16,6 +16,8 @@ router.get("/", verifyToken, async (req, res) => {
         image: doctor.image,
         review: doctor.reviews,
         fees: doctor.fees,
+        rating: doctor.rating,
+        exp: doctor.exp,
       };
     });
 

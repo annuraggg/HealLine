@@ -38,7 +38,7 @@ const Navbar = () => {
               <Avatar size="sm" />
             </MenuButton>
             <MenuList>
-              <MenuItem>Settings</MenuItem>
+              <MenuItem onClick={() => navigate("/doctor/settings")}>Settings</MenuItem>
               <MenuItem onClick={() => logout()}>Logout</MenuItem>
             </MenuList>
           </Menu>

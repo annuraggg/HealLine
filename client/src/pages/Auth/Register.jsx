@@ -19,7 +19,24 @@ import {
 } from "@chakra-ui/react";
 import emailjs from "@emailjs/browser";
 
+
+// 
+
+
+
+
+
+
+
+// 
 const Register = ({register}) => {
+  const [doctorProfile, setDoctorProfile] = useState({
+    name: '',
+    specialty: '',
+    contact: '',
+    bio: '',
+  });
+  
   const toast = useToast();
   const [fName, setFName] = useState("");
   const [lName, setLName] = useState("");

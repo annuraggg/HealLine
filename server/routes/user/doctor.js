@@ -15,6 +15,11 @@ router.get("/:doctor", verifyToken, async (req, res) => {
 
   try {
     const doc = await userCol.findOne({ _id: new ObjectId(doctor) });
+    const appointment = await apppointmentCol.findOne({
+      patientName: req.user.id.toString(),
+      doctorName: doctor.toString(),
+      status: "approved",
+    });
     const docObj = {
       fname: doc.fName,
       lname: doc.lName,
@@ -25,7 +30,7 @@ router.get("/:doctor", verifyToken, async (req, res) => {
       fees: doc.fees,
     };
 
-    res.json({ success: true, doctor: docObj });
+    res.json({ success: true, doctor: docObj, appointment: appointment });
   } catch (error) {
     console.log(error);
     res.json({ success: false, error: error });
@@ -116,12 +121,14 @@ router.post("/:id/rate", verifyToken, async (req, res) => {
   const appointmentNo = req.body.appointmentNo;
 
   try {
-    const appointment = await apppointmentCol.findOne({_id: new ObjectId(appointmentNo)})
+    const appointment = await apppointmentCol.findOne({
+      _id: new ObjectId(appointmentNo),
+    });
     if (appointment.status == "pending") {
       return res.json({ success: false, error: "Appointment not completed" });
-    } else if (appointment  .status == "cancelled") {
+    } else if (appointment.status == "cancelled") {
       return res.json({ success: false, error: "Appointment cancelled" });
-    } 
+    }
 
     await userCol.updateOne(
       { _id: new ObjectId(id) },
@@ -144,12 +151,15 @@ router.post("/:id/rate", verifyToken, async (req, res) => {
 
 router.post("/:ui/prescriptions", verifyToken, async (req, res) => {
   try {
-    const presc = await prescriptionCol.findOne({patientName: req.user.id.toString(), doctorName: req.params.id.toString()})
+    const presc = await prescriptionCol.findOne({
+      patientName: req.user.id.toString(),
+      doctorName: req.params.id.toString(),
+    });
     res.json({ success: true, presc: presc });
   } catch (error) {
     console.log(error);
     res.json({ success: false, error: error });
   }
-})
+});
 
 export default router;
