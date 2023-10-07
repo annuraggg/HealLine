@@ -26,7 +26,7 @@ const Navbar = () => {
             fontSize="20px"
             fontFamily="'Dancing Script', Cursive"
             cursor="pointer"
-            onClick={() => navigate("/user")}
+            onClick={() => navigate("/doctor")}
           >
             {import.meta.env.VITE_APP_NAME}
           </Heading>

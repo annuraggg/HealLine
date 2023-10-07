@@ -10,9 +10,11 @@ import {
   DrawerFooter,
   Button,
 } from "@chakra-ui/react";
+import Chat from "./Chat"
 
 const Message = () => {
-  return <DrawerBody></DrawerBody>;
+  return (<></>
+  );
 };
 
 export default Message;

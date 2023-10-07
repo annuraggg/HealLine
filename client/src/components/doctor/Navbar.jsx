@@ -13,7 +13,8 @@ import {
 } from "@chakra-ui/react";
 
 import { useNavigate } from "react-router-dom";
-import logout from "../../components/logout";
+import logout from "../logout";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -26,11 +27,11 @@ const Navbar = () => {
             fontSize="20px"
             fontFamily="'Dancing Script', Cursive"
             cursor="pointer"
-            onClick={() => navigate("/user")}
+            onClick={() => navigate("/doctor")}
           >
             {import.meta.env.VITE_APP_NAME}
           </Heading>
-          <Link onClick={() => navigate("/appointments")}>Consult</Link>
+          <Link onClick={() => navigate("/doctor/appointments")}>Appointments</Link>
         </Flex>
         <Box>
           <Menu>
@@ -39,7 +40,6 @@ const Navbar = () => {
             </MenuButton>
             <MenuList>
               <MenuItem>Profile</MenuItem>
-              <MenuItem>Dashboard</MenuItem>
               <MenuItem>Settings</MenuItem>
               <MenuItem onClick={() => logout()}>Logout</MenuItem>
             </MenuList>

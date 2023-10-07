@@ -8,7 +8,7 @@ router.get("/", verifyToken, async (req, res) => {
     const doctors = await userCol.find({ role: "D" }).toArray();
     const doctorsObj = doctors.map((doctor) => {
       return {
-        id: doctor._id,
+        _id: doctor._id,
         fName: doctor.fName,
         lName: doctor.lName,
         category: doctor.category,

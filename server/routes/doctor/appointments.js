@@ -1,5 +1,5 @@
 import express from "express";
-import { apppointmentCol } from "../../apis/mongo.js";
+import { apppointmentCol, userCol } from "../../apis/mongo.js";
 import { ObjectId } from "mongodb";
 import { verifyToken } from "../../apis/jwt.js";
 const router = express.Router();
@@ -10,6 +10,15 @@ router.post("/", verifyToken, async (req, res) => {
     const appointments = await apppointmentCol
       .find({ doctorName: id.toString() })
       .toArray();
+
+    for (const appointment of appointments) {
+      const patient = await userCol.findOne({
+        _id: new ObjectId(appointment.patientName),
+      });
+      if (patient) {
+        appointment.patientName = patient.fName + " " + patient.lName;
+      }
+    }
     res.json({ success: true, appointments: appointments });
   } catch (error) {
     console.log(error);

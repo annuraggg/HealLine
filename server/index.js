@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import userHandler from "./routes/user/main.js";
 import authHandler from "./routes/auth.js";
+import doctorHandler from "./routes/doctor/main.js";
 
 app.use(cors({ credentials: true, origin: process.env.FRONTEND_ADDRESS }));
 dotenv.config();
@@ -15,5 +16,6 @@ console.log(process.env.FRONTEND_ADDRESS);
 
 app.use("/auth", authHandler);
 app.use("/users", userHandler);
+app.use("/doctors", doctorHandler);
 
 app.listen(3000);

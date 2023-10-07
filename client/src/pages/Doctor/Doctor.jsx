@@ -1,242 +1,126 @@
-import React, { useEffect, useRef } from "react";
-import Navbar from "./Navbar";
-import {
-  Box,
-  Flex,
-  Heading,
-  Skeleton,
-  Text,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  IconButton,
-  useDisclosure,
-  Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerOverlay,
-  DrawerHeader,
-  DrawerFooter,
-  Button,
-  Input,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Image,
-} from "@chakra-ui/react";
-import Star from "../../components/global/Star";
-import Message from "./Message";
-import Presc from "./Presc";
+import React, { useEffect, useState } from "react";
+import Navbar from "../../components/doctor/Navbar";
+import { Box, Table, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
+import jwtDecode from "jwt-decode";
 import Cookies from "js-cookie";
-import jwt_decode from "jwt-decode";
-import Twilio from "twilio-video";
-import { useNavigate } from "react-router-dom";
-import Profile from "./Profile";
 
 const Doctor = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const firstField = React.useRef();
-  const [doctor, setDoctor] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [avg, setAvg] = React.useState(0);
-  const [decoded, setDecoded] = React.useState({});
-  const [update, setUpdate] = React.useState(false);
-  const [time, setTime] = React.useState("");
-  const [date, setDate] = React.useState("");
-
-  const navigate = useNavigate();
-
-  const {
-    isOpen: isBookOpen,
-    onOpen: onBookOpen,
-    onClose: onBookClose,
-  } = useDisclosure();
+  const date = new Date();
+  const [appointments, setAppointments] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [todayAppointments, setTodayAppointments] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
 
   useEffect(() => {
-    if (!loading) {
-      let sum = 0;
-      doctor?.review?.map((review) => {
-        sum += review.rating;
-      });
-      console.log(sum);
-      setAvg(sum / doctor.review.length);
-    }
-  }, [doctor, loading]);
-
-  useEffect(() => {
+    const token = Cookies.get("token");
     try {
-      const token = Cookies.get("token");
-      const decoded = jwt_decode(token);
-      setDecoded(decoded);
-    } catch (error) {
-      navigate("/auth");
+      const decoded = jwtDecode(token);
+      setUser(decoded);
+    } catch (err) {
+      console.log(err);
     }
   }, []);
 
-  const id = window.location.pathname.split("/")[3];
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success == true) {
-          setDoctor(data.doctor);
-          setLoading(false);
-        } else {
-          console.log("error");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
-
-  const {
-    isOpen: isPrescOpen,
-    onOpen: onPrescOpen,
-    onClose: onPrescClose,
-  } = useDisclosure();
-
-  const {
-    isOpen: isVideoOpen,
-    onOpen: onVideoOpen,
-    onClose: onVideoClose,
-  } = useDisclosure();
-
-  const goVideo = () => {
-    onVideoOpen();
-    startRoom();
-  };
-
-  const startRoom = async (event) => {
-    const roomName = decoded.id;
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}/video`,
-      {
+    if (user) {
+      fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/doctors/appointments`, {
         method: "POST",
+        credentials: "include",
         headers: {
-          Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ roomName: roomName }),
-      }
-    );
-    const { token } = await response.json();
-    const room = await joinVideoRoom(roomName, token);
-
-    handleConnectedParticipant(room.localParticipant);
-    room.participants.forEach(handleConnectedParticipant);
-    room.on("participantConnected", handleConnectedParticipant);
-
-    room.on("participantDisconnected", handleDisconnectedParticipant);
-    window.addEventListener("pagehide", () => room.disconnect());
-    window.addEventListener("beforeunload", () => room.disconnect());
-  };
-
-  const handleConnectedParticipant = (participant) => {
-    const participantDiv = document.createElement("div");
-    participantDiv.setAttribute("id", participant.identity);
-    participantDiv.setAttribute("style", "border: 3px solid black;");
-    document.getElementById("video-container").appendChild(participantDiv);
-    participant.tracks.forEach((trackPublication) => {
-      handleTrackPublication(trackPublication, participant);
-    });
-
-    participant.on("trackPublished", handleTrackPublication);
-  };
-
-  const handleTrackPublication = (trackPublication, participant) => {
-    function displayTrack(track) {
-      const participantDiv = document.getElementById(participant.identity);
-      participantDiv.append(track.attach());
-    }
-    if (trackPublication.track) {
-      displayTrack(trackPublication.track);
-    }
-
-    trackPublication.on("subscribed", displayTrack);
-  };
-
-  const handleDisconnectedParticipant = (participant) => {
-    participant.removeAllListeners();
-    const participantDiv = document.getElementById(participant.identity);
-    participantDiv.remove();
-  };
-
-  const joinVideoRoom = async (roomName, token) => {
-    const room = await Twilio.connect(token, {
-      room: roomName,
-    });
-    return room;
-  };
-
-  const disconnectVideoRoom = () => {
-    window.location.reload();
-  };
-
-  const consultancyTimes = [
-    "10:00 AM",
-    "10:30 AM",
-    "11:00 AM",
-    "11:30 AM",
-    "12:00 PM",
-    "12:30 PM",
-    "01:00 PM",
-    "01:30 PM",
-    "02:00 PM",
-    "02:30 PM",
-    "03:00 PM",
-    "03:30 PM",
-    "04:00 PM",
-    "04:30 PM",
-    "05:00 PM",
-    "05:30 PM",
-    "06:00 PM",
-    "06:30 PM",
-    "07:00 PM",
-    "07:30 PM",
-  ];
-
-  const bookSlot = () => {
-    fetch(`${import.meta.env.VITE_BACKEND_ADDRESS}/users/doctor/${id}/book`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ date, time }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success == true) {
-          onBookClose();
-        } else {
-          console.log("error");
-        }
+        body: JSON.stringify({ id: user.id }),
       })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
+        .then((res) => res.json())
+        .then((data) => {
+          setAppointments(data.appointments);
+          console.log(data.appointments);
+        }),
+        (err) => console.log(err);
+    }
+  }, [user]);
 
-  return (
-    <>
-      <Navbar />
-      <Profile></Profile>
-    </>
-  );
+  useEffect(() => {
+    if (appointments) {
+      setTodayAppointments(
+        appointments.filter((appointment) => {
+          const appointmentDate = new Date(appointment.date);
+          return (
+            appointmentDate.getDate() === date.getDate() &&
+            appointmentDate.getMonth() === date.getMonth() &&
+            appointmentDate.getFullYear() === date.getFullYear()
+          );
+        })
+      );
+      setUpcomingAppointments(
+        appointments.filter((appointment) => {
+          const appointmentDate = new Date(appointment.date);
+          return (
+            appointmentDate.getDate() > date.getDate() ||
+            appointmentDate.getMonth() > date.getMonth() ||
+            appointmentDate.getFullYear() > date.getFullYear()
+          );
+        })
+      );
+
+      setLoading(false);
+    }
+
+    console.log(todayAppointments);
+  }, [appointments]);
+
+  if (!loading) {
+    return (
+      <>
+        <Navbar />
+        <Box bg="gray.100" height="90vh" p="10px 50px">
+          <Box bg="green.100" height="20vh" borderRadius="15px" p="20px">
+            <Box>
+              <Box>Today's Appointments</Box>
+              <Box>
+                {todayAppointments.map((appointment) => (
+                  <Table key={appointment._id}>
+                    <Thead>
+                      <Tr>
+                        <Td>Patient Name</Td>
+                        <Td>Schedule</Td>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      <Tr>
+                        <Td>{appointment.patientName}</Td>
+                        <Td>{appointment.date}</Td>
+                      </Tr>
+                    </Tbody>
+                  </Table>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            bg="blue.100"
+            height="20vh"
+            borderRadius="15px"
+            mt="20px"
+            p="20px"
+          >
+            <Box>
+              <Box>Upcoming Appointments</Box>
+              <Box>
+                {upcomingAppointments.map((appointment) => (
+                  <Box key={appointment._id}>
+                    <Box>{appointment.patient.name}</Box>
+                    <Box>{appointment.date}</Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </>
+    );
+  }
 };
 
 export default Doctor;
